@@ -1,86 +1,106 @@
-<h1 align="center">E-commerce Website</h1>
-<p align="center">Spring Boot backend • React + Vite frontend</p>
+# 🛒 E-commerce Website
 
-<p align="center">
-  <a href="#-project-structure">Structure</a> •
-  <a href="#-quick-start">Quick Start</a> •
-  <a href="#-configuration">Configuration</a> •
-  <a href="#-api-examples">API</a> •
-  <a href="#-scripts">Scripts</a> •
-  <a href="#-troubleshooting">Troubleshooting</a>
-</p>
+A full-stack e-commerce application built with **Spring Boot** backend and **React + Vite** frontend.
 
----
+## 🏗️ Architecture
 
-## 📦 Project Structure
+- **Backend**: Spring Boot with Maven, H2 Database, JPA/Hibernate
+- **Frontend**: React with Vite, TypeScript support
+- **Development**: Hot reload, proxy configuration, H2 console
 
+## 📁 Project Structure
+
+```
 E-commerce-website/
-├─ ecom-backend/ # Spring Boot app (Maven/Gradle)
-│ ├─ src/main/java/...
-│ ├─ src/main/resources/application.properties
-│ └─ pom.xml
-├─ ecom-frontend/ # React + Vite app (normal folder)
-│ ├─ index.html
-│ ├─ src/
-│ ├─ package.json
-│ └─ vite.config.(ts|js)
+├─ ecom-backend/              # Spring Boot application
+│  ├─ src/main/java/          # Java source code
+│  ├─ src/main/resources/     # Configuration files
+│  │  └─ application.properties
+│  ├─ pom.xml                 # Maven dependencies
+│  └─ target/                 # Build output
+├─ ecom-frontend/             # React + Vite application  
+│  ├─ src/                    # React source code
+│  ├─ index.html              # Entry HTML file
+│  ├─ package.json            # npm dependencies
+│  ├─ vite.config.js          # Vite configuration
+│  └─ dist/                   # Build output
 ├─ .gitignore
 └─ README.md
-
-yaml
-Copy
-Edit
-
-> If Git ever shows `modified: ecom-frontend (modified content in submodules)`, the frontend became a **submodule** by mistake—see **Troubleshooting**.
-
----
+```
 
 ## 🚀 Quick Start
 
-### 1) Backend (Spring Boot)
+### Prerequisites
+
+- **Java 17+** (for Spring Boot)
+- **Node.js 18+** (for React/Vite)
+- **Maven** (for backend build)
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/prateek2468/E-commerce-website.git
+cd E-commerce-website
+```
+
+### 2. Backend Setup (Spring Boot)
 
 ```bash
 cd ecom-backend
 mvn spring-boot:run
-# http://localhost:8080
-2) Frontend (React + Vite)
-bash
-Copy
-Edit
+```
+
+The backend will start at: `http://localhost:8080`
+
+### 3. Frontend Setup (React + Vite)
+
+```bash
 cd ../ecom-frontend
 npm install
 npm run dev
-# http://localhost:5173
-⚙️ Configuration
-application.properties (dev example)
-properties
-Copy
-Edit
-# Server
+```
+
+The frontend will start at: `http://localhost:5173`
+
+## ⚙️ Configuration
+
+### Backend Configuration
+
+Edit `ecom-backend/src/main/resources/application.properties`:
+
+```properties
+# Server Configuration
 server.port=8080
 
-# H2 (dev)
+# H2 Database (Development)
 spring.datasource.url=jdbc:h2:file:~/ecomdb;AUTO_SERVER=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
 spring.datasource.driver-class-name=org.h2.Driver
 spring.datasource.username=sa
 spring.datasource.password=
-spring.h2.console.enabled=true
 
-# JPA/Hibernate
+# H2 Console (Development)
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+
+# JPA/Hibernate Configuration
 spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect
 
-# Actuator (debug endpoints/mappings)
+# Actuator Endpoints
 management.endpoints.web.exposure.include=health,info,mappings
-Open H2 console: http://localhost:8080/h2-console
-Use the same JDBC URL as above.
+```
 
-Vite dev proxy (avoid CORS during dev)
-ecom-frontend/vite.config.(ts|js):
+**H2 Database Console**: Access at `http://localhost:8080/h2-console`
+- JDBC URL: `jdbc:h2:file:~/ecomdb`
+- Username: `sa`
+- Password: (leave empty)
 
-ts
-Copy
-Edit
+### Frontend Configuration
+
+Configure Vite proxy in `ecom-frontend/vite.config.js` to avoid CORS issues:
+
+```javascript
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -88,100 +108,262 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api': 'http://localhost:8080'
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false
+      }
     }
   }
 })
-Expose Spring endpoints under /api/... (e.g., @RequestMapping("/api")) so the proxy applies cleanly.
+```
 
-🔗 API Examples
-Assuming controllers are under /api.
+## 🔗 API Documentation
 
-Create product (cURL):
+### Base URL
+- Development: `http://localhost:8080/api`
+- All endpoints should be prefixed with `/api`
 
-bash
-Copy
-Edit
-curl -i -X POST http://localhost:8080/api/products \
+### Product Endpoints
+
+#### Create Product
+```bash
+curl -X POST http://localhost:8080/api/products \
   -H "Content-Type: application/json" \
-  -d '{"name":"Item","description":"Nice","brand":"BrandX","price":19.99,"category":"General","releaseDate":"2024-01-15","available":true,"quantity":10}'
-Frontend calls (fetch):
+  -d '{
+    "name": "Sample Product",
+    "description": "Product description",
+    "brand": "Brand Name",
+    "price": 29.99,
+    "category": "Electronics",
+    "releaseDate": "2024-01-15",
+    "available": true,
+    "quantity": 50
+  }'
+```
 
-ts
-Copy
-Edit
-export async function fetchProducts() {
-  const res = await fetch('/api/products');  // proxied to 8080 in dev
-  if (!res.ok) throw new Error('Failed to fetch products');
-  return res.json();
-}
+#### Get All Products
+```bash
+curl -X GET http://localhost:8080/api/products
+```
 
-export async function createProduct(p: unknown) {
-  const res = await fetch('/api/products', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(p),
-  });
-  if (!res.ok) throw new Error('Failed to create product');
-  return res.json?.() ?? null;
-}
-🧰 Scripts
-Backend (Maven):
+### Frontend API Integration
 
-bash
-Copy
-Edit
+Example service functions:
+
+```typescript
+// Product Service
+export const productService = {
+  // Get all products
+  async fetchProducts() {
+    const response = await fetch('/api/products');
+    if (!response.ok) throw new Error('Failed to fetch products');
+    return response.json();
+  },
+
+  // Create new product
+  async createProduct(product: Product) {
+    const response = await fetch('/api/products', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(product),
+    });
+    if (!response.ok) throw new Error('Failed to create product');
+    return response.json();
+  },
+
+  // Update product
+  async updateProduct(id: number, product: Product) {
+    const response = await fetch(`/api/products/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(product),
+    });
+    if (!response.ok) throw new Error('Failed to update product');
+    return response.json();
+  },
+
+  // Delete product
+  async deleteProduct(id: number) {
+    const response = await fetch(`/api/products/${id}`, {
+      method: 'DELETE',
+    });
+    if (!response.ok) throw new Error('Failed to delete product');
+  }
+};
+```
+
+## 🛠️ Development Scripts
+
+### Backend (Maven)
+```bash
+# Run application
 mvn spring-boot:run
+
+# Run tests
 mvn test
+
+# Build package
 mvn package
-Frontend (npm):
 
-bash
-Copy
-Edit
+# Clean build
+mvn clean package
+```
+
+### Frontend (npm)
+```bash
+# Development server
 npm run dev
+
+# Build for production
 npm run build
+
+# Preview production build
 npm run preview
-🧯 Troubleshooting
-Frontend shows as “modified content in submodules”
-Your ecom-frontend turned into a submodule. Convert back to a normal folder:
 
-Ensure the real files exist (re-add submodule temporarily if needed to materialize files).
+# Run tests (if configured)
+npm run test
 
-Move files out, remove submodule wiring, move files back, remove any nested .git in ecom-frontend.
+# Lint code (if configured)
+npm run lint
+```
 
-git add ecom-frontend && git commit -m "Make frontend a normal folder".
+## 🐛 Troubleshooting
 
-415 / Unsupported Media Type
-Send JSON: Content-Type: application/json and JSON.stringify(body) in the frontend.
+### Common Issues
 
-CORS errors
-Use the Vite proxy above. If calling directly, add @CrossOrigin or a global CORS config in Spring.
+#### 1. Frontend appears as "modified content in submodules"
+This happens when the frontend folder becomes a Git submodule accidentally.
 
-JPA entity issues
-Use a regular class with a no-args constructor; avoid Java record for JPA entities. Don’t name columns with SQL keywords like desc—use description.
+**Solution**:
+1. Backup your frontend files
+2. Remove the submodule reference
+3. Re-add as a regular folder
+4. Commit changes
 
-🗺️ Roadmap
-Switch H2 → PostgreSQL/MySQL
+```bash
+git submodule deinit ecom-frontend
+rm -rf .git/modules/ecom-frontend
+git rm --cached ecom-frontend
+# Re-add files normally
+git add ecom-frontend
+git commit -m "Fix: Convert frontend from submodule to regular folder"
+```
 
-Authentication/authorization
+#### 2. HTTP 415 - Unsupported Media Type
+**Cause**: Missing or incorrect Content-Type header
 
-CI/CD (GitHub Actions)
+**Solution**: Ensure you're sending JSON with proper headers:
+```javascript
+fetch('/api/products', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(data)
+})
+```
 
-Docker Compose for local dev
+#### 3. CORS Errors
+**Solution**: Use the Vite proxy configuration shown above, or add CORS configuration in Spring Boot:
 
-📄 License
-TBD. Consider adding a LICENSE (MIT/Apache-2.0) if you plan to open source.
+```java
+@CrossOrigin(origins = "http://localhost:5173")
+@RestController
+@RequestMapping("/api")
+public class ProductController {
+    // Controller methods
+}
+```
 
-yaml
-Copy
-Edit
+#### 4. JPA Entity Issues
+- Use regular classes with no-args constructors (not records) for JPA entities
+- Avoid SQL reserved keywords as column names (use `description` instead of `desc`)
+- Ensure proper JPA annotations (`@Entity`, `@Id`, `@GeneratedValue`, etc.)
+
+#### 5. Port Already in Use
+```bash
+# Find process using port 8080
+lsof -i :8080
+# Kill process
+kill -9 <PID>
+
+# Or change port in application.properties
+server.port=8081
+```
+
+## 🚀 Deployment
+
+### Production Build
+
+#### Backend
+```bash
+cd ecom-backend
+mvn clean package
+java -jar target/ecom-backend-*.jar
+```
+
+#### Frontend
+```bash
+cd ecom-frontend
+npm run build
+# Serve dist/ folder with web server
+```
+
+### Environment Variables
+Create `application-prod.properties` for production:
+
+```properties
+server.port=${PORT:8080}
+spring.datasource.url=${DATABASE_URL}
+spring.datasource.username=${DB_USERNAME}
+spring.datasource.password=${DB_PASSWORD}
+spring.jpa.hibernate.ddl-auto=validate
+spring.h2.console.enabled=false
+```
+
+## 🗺️ Roadmap
+
+- [ ] **Database Migration**: Switch from H2 to PostgreSQL/MySQL
+- [ ] **Authentication**: Implement JWT-based auth system
+- [ ] **Shopping Cart**: Add cart functionality
+- [ ] **Payment Integration**: Stripe/PayPal integration
+- [ ] **User Management**: Registration, profiles, order history
+- [ ] **Admin Panel**: Product management, order tracking
+- [ ] **Testing**: Unit tests, integration tests
+- [ ] **CI/CD**: GitHub Actions workflow
+- [ ] **Containerization**: Docker and Docker Compose setup
+- [ ] **Monitoring**: Logging, metrics, health checks
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature-name`
+3. Commit your changes: `git commit -am 'Add some feature'`
+4. Push to the branch: `git push origin feature/your-feature-name`
+5. Submit a pull request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👨‍💻 Author
+
+**Prateek** - [@prateek2468](https://github.com/prateek2468)
 
 ---
 
-### Why your alignment looked off
-- Using `printf` or pasting with mismatched quotes can break line breaks and code fences.
-- Mixing tabs/spaces inside code blocks can look jagged—this version uses spaces and consistent blank lines so GitHub renders cleanly.
+### 📞 Support
 
-If you want, I can commit this directly as a PR-ready patch (just paste it here if you need small tweaks like your exact endpoints).
-::contentReference[oaicite:0]{index=0}
+If you have any questions or run into issues, please:
+1. Check the [Troubleshooting](#-troubleshooting) section
+2. Search existing [Issues](https://github.com/prateek2468/E-commerce-website/issues)
+3. Create a new issue with detailed information
+
+---
+
+⭐ **Star this repo** if you find it helpful!
